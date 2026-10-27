@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Состав команды — Dota Heroes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #f4f6f9;
+            color: #202938;
+        }
+        .panel, .hero {
+            background: white;
+            padding: 20px;
+            margin: 14px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #0000000d;
+        }
+        .hero, .hero-info, .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        select {
+            padding: 11px;
+            border: 1px solid #ccd2dc;
+            border-radius: 6px;
+            margin-right: 8px;
+            max-width: 100%;
+        }
+        button, a {
+            display: inline-block;
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 6px;
+            background: #3549a3;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .remove { background: #a83232; }
+        .muted { color: #667085; }
+        .success { color: #18794e; }
+        .error { color: #b42318; }
+        @media (max-width: 650px) {
+            .hero, .hero-info, .top {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="top">
+    <div>
+        <h1 th:text="${team.name}">Название команды</h1>
+        <p class="muted">
+            Состав команды · ID:
+            <span th:text="${team.id}">1</span>
+        </p>
+    </div>
+    <a th:href="@{/teams}">← Все команды</a>
+</header>
+
+<p class="success" th:if="${success}" th:text="${success}"></p>
+<p class="error" th:if="${error}" th:text="${error}"></p>
+
+<section class="panel">
+    <h2>Герои команды</h2>
+
+    <p th:if="${#lists.isEmpty(team.heroes)}">
+        В этой команде пока нет героев.
+    </p>
+
+    <article class="hero" th:each="hero : ${team.heroes}">
+        <div>
+            <h3 th:text="${hero.name}">Имя героя</h3>
+            <p class="muted">
+                <span th:text="${hero.roleName}">Роль</span>
+                · HP: <span th:text="${hero.health}">100</span>
+                · Урон: <span th:text="${hero.damage}">20</span>
+            </p>
+        </div>
+
+        <form th:action="@{/teams/{teamId}/remove-hero(teamId=${team.id})}"
+              method="post">
+            <input type="hidden" name="heroId" th:value="${hero.id}">
+            <button class="remove" type="submit">
+                Убрать из команды
+            </button>
+        </form>
+    </article>
+</section>
+
+<section class="panel">
+    <h2>Добавить героя</h2>
+
+    <p th:if="${#lists.isEmpty(availableHeroes)}">
+        Нет свободных героев. Сначала создай героя или убери его из другой команды.
+    </p>
+
+    <form th:unless="${#lists.isEmpty(availableHeroes)}"
+          th:action="@{/teams/{teamId}/add-hero(teamId=${team.id})}"
+          method="post">
+
+        <label for="heroId">Выбери героя:</label>
+        <select id="heroId" name="heroId" required>
+            <option value="">Выбери героя</option>
+            <option th:each="hero : ${availableHeroes}"
+                    th:value="${hero.id}"
+                    th:text="${hero.name + ' — ' + hero.roleName}">
+                Герой
+            </option>
+        </select>
+
+        <button type="submit">Добавить в команду</button>
+    </form>
+</section>
+
+</body>
+</html>

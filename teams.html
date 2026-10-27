@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Teams — Dota Heroes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #f4f6f9;
+            color: #202938;
+        }
+        .top, .team, .actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .team, .panel {
+            background: white;
+            padding: 20px;
+            margin: 14px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #0000000d;
+        }
+        a, button {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 0;
+            background: #3549a3;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .secondary { background: #687386; }
+        .success { color: #18794e; }
+        .error { color: #b42318; }
+        .muted { color: #667085; }
+        @media (max-width: 600px) {
+            .top, .team { align-items: flex-start; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="top">
+    <div>
+        <h1>Teams</h1>
+        <p class="muted">Управление командами Dota Heroes</p>
+    </div>
+    <div class="actions">
+        <a th:href="@{/}">Главная</a>
+        <a th:href="@{/teams/new}">+ Создать команду</a>
+    </div>
+</header>
+
+<p class="success" th:if="${success}" th:text="${success}"></p>
+<p class="error" th:if="${error}" th:text="${error}"></p>
+
+<section th:if="${#lists.isEmpty(teams)}" class="panel">
+    <h2>Команд пока нет</h2>
+    <p>Создай первую команду, чтобы начать формировать состав.</p>
+    <a th:href="@{/teams/new}">Создать команду</a>
+</section>
+
+<section th:each="team : ${teams}" class="team">
+    <div>
+        <h2 th:text="${team.name}">Название команды</h2>
+        <p class="muted">
+            ID команды: <span th:text="${team.id}">1</span>
+        </p>
+    </div>
+    <a th:href="@{/teams/{id}(id=${team.id})}">Открыть состав</a>
+</section>
+
+</body>
+</html>

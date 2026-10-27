@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title th:text="${pageTitle}">Герой</title><link rel="stylesheet" th:href="@{/style.css}"></head>
+<body><main class="container narrow"><a class="back" th:href="@{/}">← К списку героев</a><p class="eyebrow">DOTA 2 · HERO EDITOR</p><h1 th:text="${pageTitle}">Добавление героя</h1><p class="sub">Заполни основные параметры и характеристики выбранной роли.</p>
+<form class="hero-form" th:action="@{/heroes/save}" th:object="${heroForm}" method="post"><input type="hidden" th:field="*{id}">
+<label>Имя героя<input type="text" th:field="*{name}" placeholder="Например, Juggernaut" required><span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span></label>
+<div class="two"><label>Здоровье (HP)<input type="number" min="0" th:field="*{health}" required></label><label>Урон (DMG)<input type="number" min="0" th:field="*{damage}" required></label></div>
+<label>Роль<select th:field="*{heroType}" id="heroType"><option value="CARRY">Керри</option><option value="SUPPORT">Саппорт</option></select></label>
+<div id="carryFields" class="specific"><h2>Параметры керри</h2><div class="two"><label>Шанс крита (%)<input type="number" min="0" max="100" th:field="*{critChance}"></label><label>Ловкость<input type="number" min="0" th:field="*{agility}"></label></div></div>
+<div id="supportFields" class="specific"><h2>Параметры саппорта</h2><div class="two"><label>Мана<input type="number" min="0" th:field="*{mana}"></label><label>Сила лечения<input type="number" min="0" th:field="*{healPower}"></label></div></div>
+<div class="form-actions"><button class="button primary" type="submit">Сохранить</button><a class="button" th:href="@{/}">Отмена</a></div></form></main>
+<script>const type=document.getElementById('heroType');function toggle(){document.getElementById('carryFields').style.display=type.value==='CARRY'?'block':'none';document.getElementById('supportFields').style.display=type.value==='SUPPORT'?'block':'none';}type.addEventListener('change',toggle);toggle();</script></body></html>

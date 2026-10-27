@@ -1,0 +1,460 @@
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Герои Dota 2</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 24px;
+            background: #f3f5f8;
+            color: #222;
+        }
+
+        header, nav, .actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        header {
+            justify-content: space-between;
+        }
+
+        section, .hero-card {
+            background: white;
+            padding: 18px;
+            margin: 18px 0;
+            border-radius: 10px;
+        }
+
+        .hero-card {
+            border: 1px solid #ddd;
+        }
+
+        .hero-card h3 {
+            margin-top: 0;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        button, .button, input, select {
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button, .button {
+            background: #e5ecf8;
+            color: #222;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        button:hover, .button:hover {
+            background: #d2def2;
+        }
+
+        .primary {
+            background: #d8e6ff;
+        }
+
+        .danger {
+            background: #ffe0e0;
+        }
+
+        .notice {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 12px 0;
+            overflow-wrap: anywhere;
+        }
+
+        .success {
+            background: #e0f4e5;
+        }
+
+        .error {
+            background: #ffe2e2;
+        }
+
+        .result {
+            margin-top: 14px;
+            padding: 12px;
+            background: #f0f3f8;
+            border-radius: 6px;
+            overflow-wrap: anywhere;
+        }
+
+        .result:empty {
+            display: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+        }
+
+        .stats p {
+            margin: 5px 0;
+        }
+
+        .inline-form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .inline-form[hidden] {
+            display: none;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 9px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Герои Dota 2</h1>
+
+    <nav>
+        <a class="button" th:href="@{/teams}">Команды</a>
+        <a class="button primary" th:href="@{/heroes/new}">
+            Добавить героя
+        </a>
+    </nav>
+</header>
+
+<main>
+    <div class="notice success"
+         th:if="${message}"
+         th:text="${message}"></div>
+
+    <div class="notice error"
+         th:if="${error}"
+         th:text="${error}"></div>
+
+    <!-- Поиск команды -->
+    <section>
+        <h2>Поиск команды по ID</h2>
+
+        <form th:action="@{/}" method="get" class="inline-form">
+            <input type="number"
+                   name="teamId"
+                   min="1"
+                   placeholder="ID команды"
+                   th:value="${searchedTeamId}"
+                   required>
+
+            <button class="primary" type="submit">Найти</button>
+        </form>
+
+        <p class="error"
+           th:if="${searchError}"
+           th:text="${searchError}"></p>
+
+        <div th:if="${foundTeam}">
+            <h3>
+                Команда:
+                <span th:text="${foundTeam.name}"></span>
+            </h3>
+
+            <p>
+                ID:
+                <span th:text="${foundTeam.id}"></span>
+            </p>
+
+            <p th:if="${#lists.isEmpty(foundTeam.heroes)}">
+                В команде пока нет героев.
+            </p>
+
+            <div class="table-wrap"
+                 th:unless="${#lists.isEmpty(foundTeam.heroes)}">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Имя</th>
+                        <th>Роль</th>
+                        <th>HP</th>
+                        <th>Урон</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="h : ${foundTeam.heroes}">
+                        <td th:text="${h.id}"></td>
+                        <td th:text="${h.name}"></td>
+                        <td th:text="${h.roleName}"></td>
+                        <td th:text="${h.health}"></td>
+                        <td th:text="${h.damage}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>
+                <a class="button"
+                   th:href="@{/teams/{id}(id=${foundTeam.id})}">
+                    Открыть команду
+                </a>
+            </p>
+        </div>
+    </section>
+
+    <!-- Карточки героев -->
+    <section>
+        <h2>Герои</h2>
+
+        <p th:if="${#lists.isEmpty(heroes)}">
+            Героев пока нет. Добавь первого героя!
+        </p>
+
+        <article class="hero-card"
+                 th:each="hero : ${heroes}"
+                 th:id="'hero-' + ${hero.id}">
+
+            <h3>
+                <span th:text="${hero.name}"></span>
+                <small>
+                    (ID: <span th:text="${hero.id}"></span>)
+                </small>
+            </h3>
+
+            <div class="stats">
+                <p>Роль: <strong th:text="${hero.roleName}"></strong></p>
+
+                <p>Здоровье:
+                    <strong class="health"
+                            th:text="${hero.health}"></strong>
+                </p>
+
+                <p>Урон:
+                    <strong th:text="${hero.damage}"></strong>
+                </p>
+
+                <p>Статус:
+                    <strong class="status"
+                            th:text="${hero.statusText}"></strong>
+                </p>
+            </div>
+
+            <p>
+                Особенности:
+                <span class="specific-info"
+                      th:text="${hero.specificInfo}"></span>
+            </p>
+
+            <!-- Основные методы -->
+            <div class="hero-actions">
+                <button type="button"
+                        th:attr="data-id=${hero.id},data-method='info'"
+                        onclick="runAction(this)">
+                    getInfo()
+                </button>
+
+                <button type="button"
+                        th:attr="data-id=${hero.id},data-method='status'"
+                        onclick="runAction(this)">
+                    getStatusText()
+                </button>
+
+                <button type="button"
+                        th:attr="data-id=${hero.id},data-method='alive'"
+                        onclick="runAction(this)">
+                    isAlive()
+                </button>
+
+                <button type="button"
+                        th:attr="data-id=${hero.id},data-method='ability'"
+                        onclick="runAction(this)">
+                    useAbility()
+                </button>
+
+                <button type="button"
+                        th:attr="data-id=${hero.id},data-method='critical'"
+                        th:if="${hero instanceof T(ru.dota.heroes.model.Carry)}"
+                        onclick="runAction(this)">
+                    canCriticalHit()
+                </button>
+
+                <a class="button"
+                   th:href="@{/heroes/{id}/edit(id=${hero.id})}">
+                    Редактировать
+                </a>
+
+                <form th:action="@{/heroes/{id}/delete(id=${hero.id})}"
+                      method="post"
+                      onsubmit="return confirm('Удалить этого героя?');">
+                    <button class="danger" type="submit">Удалить</button>
+                </form>
+            </div>
+
+            <!-- Форма получения урона -->
+            <form class="inline-form"
+                  onsubmit="return damageHero(event, this)"
+                  th:attr="data-id=${hero.id}">
+                <label>
+                    Урон:
+                    <input type="number"
+                           name="amount"
+                           min="1"
+                           value="10"
+                           required>
+                </label>
+
+                <button type="submit">takeDamage(amount)</button>
+            </form>
+
+            <!-- Форма атаки -->
+            <form class="inline-form"
+                  onsubmit="return attackHero(event, this)"
+                  th:attr="data-id=${hero.id}">
+                <label>
+                    Цель атаки:
+                    <select name="targetId" required>
+                        <option value="">Выбери героя</option>
+                        <option th:each="target : ${heroes}"
+                                th:if="${target.id != hero.id}"
+                                th:value="${target.id}"
+                                th:text="${target.name + ' (ID: ' + target.id + ')'}">
+                        </option>
+                    </select>
+                </label>
+
+                <button type="submit">attack(target)</button>
+            </form>
+
+            <!-- Результат остаётся в этой карточке -->
+            <div class="result"
+                 aria-live="polite"
+                 th:id="'result-' + ${hero.id}"></div>
+
+        </article>
+    </section>
+</main>
+
+<script>
+    async function sendAction(heroId, method, extra = {}) {
+        const card = document.getElementById('hero-' + heroId);
+        const result = document.getElementById('result-' + heroId);
+
+        result.textContent = 'Выполняется...';
+
+        const params = new URLSearchParams();
+        params.append('method', method);
+
+        Object.entries(extra).forEach(([key, value]) => {
+            params.append(key, value);
+        });
+
+        try {
+            const response = await fetch(
+                '/heroes/' + heroId + '/action',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type':
+                            'application/x-www-form-urlencoded;charset=UTF-8'
+                    },
+                    body: params.toString()
+                }
+            );
+
+            const data = await response.json();
+
+            result.textContent = data.message || 'Действие завершено';
+
+            if (data.success) {
+                // Обновляем только данные в карточке, не страницу целиком.
+                card.querySelector('.health').textContent = data.health;
+                card.querySelector('.status').textContent = data.status;
+                card.querySelector('.specific-info').textContent =
+                    data.specificInfo;
+
+                // Если атакована другая цель, обновляем её карточку тоже.
+                if (data.targetId != null) {
+                    const targetCard = document.getElementById(
+                        'hero-' + data.targetId
+                    );
+
+                    if (targetCard) {
+                        targetCard.querySelector('.health').textContent =
+                            data.targetHealth;
+                        targetCard.querySelector('.status').textContent =
+                            data.targetStatus;
+                    }
+                }
+            }
+        } catch (error) {
+            result.textContent =
+                'Не удалось выполнить действие. Проверь соединение с сервером.';
+        }
+    }
+
+    function runAction(button) {
+        sendAction(button.dataset.id, button.dataset.method);
+    }
+
+    async function damageHero(event, form) {
+        event.preventDefault();
+
+        const amount = form.elements.amount.value;
+
+        await sendAction(form.dataset.id, 'damage', { amount: amount });
+
+        return false;
+    }
+
+    async function attackHero(event, form) {
+        event.preventDefault();
+
+        const targetId = form.elements.targetId.value;
+
+        if (!targetId) {
+            return false;
+        }
+
+        await sendAction(
+            form.dataset.id,
+            'attack',
+            { targetId: targetId }
+        );
+
+        return false;
+    }
+</script>
+
+</body>
+</html>
